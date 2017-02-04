@@ -1,12 +1,12 @@
 #!/bin/bash
 
-MSMTP="/usr/bin/msmtp"
-TMPDIR="/var/tmp/smtpdd"
-TMPFILENAME="mailqfile.$RANDOM.`date +%s`.$$"
-LOCKFILE="$1/.smtpdd.lck"
-RUNT=0
+msmtp_bin="/usr/bin/msmtp"
+tmp_dir="/var/tmp/smtpdd"
+tmp_filename="mailqfile.$RANDOM.`date +%s`.$$"
+lock_file="$1/.smtpdd.lck"
+runt=0
 
-EX_TEMPFAIL=75
+ex_tempfail=75
 
 printUsage()
 {
@@ -30,11 +30,11 @@ attemptDelivery()
   if [ ! -f $mail.body ]
   then
     echo "Cannot delivery mail, mail body is missing"
-    exit $EX_TEMPFAIL
+    exit $ex_tempfail
   fi
 
   #echo "attmpting delivery of $2 from $1 as $from and $to to host $hostname with port $port"
-  $MSMTP --host $hostname --port $port -f $from $to < $mail.body
+  $msmtp_bin --host $hostname --port $port -f $from $to < $mail.body
   if [ $? == 0 ]
   then
     echo "Message delivered, deleting"
@@ -66,27 +66,27 @@ queueRun()
 
 mainRun()
 {
-  if [ ! -d $TMPDIR ]
+  if [ ! -d $tmp_dir ]
   then
-    mkdir $TMPDIR
+    mkdir $tmp_dir
     if [ $? != 0 ]
     then
-      echo "Tempdirectory configuration problem with $TMPDIR - cannot create directory"
-      logger -p mail.error -t smtpdd "Temp directory configuration problem with $TMPDIR - cannot create directory"
-      exit $EX_TEMPFAIL
+      echo "Tempdirectory configuration problem with $tmp_dir - cannot create directory"
+      logger -p mail.error -t smtpdd "Temp directory configuration problem with $tmp_dir - cannot create directory"
+      exit $ex_tempfail
     fi
   fi
 
-  chmod 0700 $TMPDIR
+  chmod 0700 $tmp_dir
 
   queuedir=$1
   from=$2
   to=$3
 
-  if [[ $RUNT == 0 ]]
+  if [[ $runt == 0 ]]
   then
-    cat > $TMPDIR/$TMPFILENAME
-    RUNT=1
+    cat > $tmp_dir/$tmp_filename
+    runt=1
   fi
 
   for host in ${@:4}
@@ -110,7 +110,7 @@ mainRun()
       if [ "$mode" != "o" ]
       then
         # attempt real delivery
-        $MSMTP --host $hostname --port $port -f $from $to < $TMPDIR/$TMPFILENAME > /dev/null 2>&1
+        $msmtp_bin --host $hostname --port $port -f $from $to < $tmp_dir/$tmp_filename > /dev/null 2>&1
         RET=$?
         if [ $RET != 0 ]
         then
@@ -154,7 +154,7 @@ mainRun()
         do
           i=$(( $i + 1 ))
         done
-        cp $TMPDIR/$TMPFILENAME $queuedir/$hostname:$port/mailf.$$.$i.qf.body
+        cp $tmp_dir/$tmp_filename $queuedir/$hostname:$port/mailf.$$.$i.qf.body
         echo $from $to > $queuedir/$hostname:$port/mailf.$$.$i.qf
       fi
     fi
@@ -166,26 +166,26 @@ mainRun()
 if [ "x$1" == "x" ]
 then
   printUsage
-  exit $EX_TEMPFAIL
+  exit $ex_tempfail
 fi
 
 if [ ! -d $1 ]
 then
   echo "queue-directory specified, $1, must exist"
-  exit $EX_TEMPFAIL
+  exit $ex_tempfail
 fi
 
 if ! touch $1/.fml
 then
   echo "queue-directory specified, $1, must exist and be writable"
-  exit $EX_TEMPFAIL
+  exit $ex_tempfail
 else
   rm -f $1/.fml
 fi
 
 chmod 0700 $1
 
-exec 8>> $LOCKFILE
+exec 8>> $lock_file
 
 if [ "x$2" == "xqrun" ]
 then
@@ -195,14 +195,14 @@ then
     exit 0
   else
     logger -p mail.warning -t smtpdd "Queue directory locked, must exit from qrun"
-    exit $EX_TEMPFAIL
+    exit $ex_tempfail
   fi
 fi
 
 if [ "x$4" == "x" ]
 then
   printUsage
-  exit $EX_TEMPFAIL
+  exit $ex_tempfail
 fi
 
 if flock -n -s 8
@@ -217,10 +217,10 @@ then
       rno=$rno+1
     fi
   done
-  rm -f $TMPDIR/$TMPFILENAME
+  rm -f $tmp_dir/$tmp_filename
 else
   logger -p mail.warning -t smtpdd "Cannot obtain shared lock - will not deliver right now"
-  rm -rf $LOCKFILE
-  exit $EX_TEMPFAIL
+  rm -rf $lock_file
+  exit $ex_tempfail
 fi
 
