@@ -1,12 +1,18 @@
 ###  How To
 
+### Get the script
+cd /usr/local/src
+git clone https://github.com/blackcobra1973/smtpdd.git
+cd /usr/local/bin
+ln -s /usr/local/src/smtpdd/smtpdd.sh
+
 ## Create the user
 useradd -c "Dual Delivery smtp user" -u 1025 -d /var/spool/smtpdd -s /bin/bash -m smtpdd
 
 ## Update master.cfg
 
 dualdelivery unix - n n - 5 pipe
-    user=smtpdd argv=/opt/smtpdd/smtpdd.sh /var/spool/smtpdd/ ${sender} ${recipient} realmailserver:25:q testmailserver:25:d othertestserver:25:o
+    user=smtpdd argv=/usr/local/bin/smtpdd.sh /var/spool/smtpdd/ ${sender} ${recipient} realmailserver:25:q testmailserver:25:d othertestserver:25:o
 
 # The line realmailserver:25:q means "deliver to realmailserver on port 25 (smtp) and queue if you fail"
 # The line testmailserver:25:d means "deliver to testmailserver on port 25 and delete if you fail"
@@ -14,7 +20,5 @@ dualdelivery unix - n n - 5 pipe
 
 # Lastly, a cron entry for smtpdd user to delivery queue'd email (crontab -e -u smtpdd)
 
-0 * * * * /opt/smtpdd/smtpdd.sh  /var/spool/smtpdd/ qrun > /dev/null 2>&1
-
-
+0 * * * * /usr/local/bin/smtpdd.sh  /var/spool/smtpdd/ qrun > /dev/null 2>&1
 
