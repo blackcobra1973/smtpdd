@@ -1,0 +1,20 @@
+###  How To
+
+## Create the user
+useradd -c "Dual Delivery smtp user" -u 1025 -d /var/spool/smtpdd -s /bin/bash -m smtpdd
+
+## Update master.cfg
+
+dualdelivery unix - n n - 5 pipe
+    user=smtpdd argv=/opt/smtpdd/smtpdd.sh /var/spool/smtpdd/ ${sender} ${recipient} realmailserver:25:q testmailserver:25:d othertestserver:25:o
+
+# The line realmailserver:25:q means "deliver to realmailserver on port 25 (smtp) and queue if you fail"
+# The line testmailserver:25:d means "deliver to testmailserver on port 25 and delete if you fail"
+# The line othertestserver:25:o means "deliver to othertestserver on port 25 and only queue the mail" - this means that mail is just thrown straight into the smtpdd queue and wont be delivered until the qrun cronjob is executed.
+
+# Lastly, a cron entry for smtpdd user to delivery queue'd email (crontab -e -u smtpdd)
+
+0 * * * * /opt/smtpdd/smtpdd.sh  /var/spool/smtpdd/ qrun > /dev/null 2>&1
+
+
+
