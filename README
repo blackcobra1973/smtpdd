@@ -9,6 +9,9 @@ ln -s /usr/local/src/smtpdd/smtpdd.sh
 ## Create the user
 useradd -c "Dual Delivery smtp user" -u 1025 -d /var/spool/smtpdd -s /bin/bash -m smtpdd
 
+## Provide sudo access to user smtpdd for the logger command (To show the correct tag )
+smtpdd   ALL = NOPASSWD: /usr/bin/logger
+
 ## Update master.cfg
 
 dualdelivery unix - n n - 5 pipe
