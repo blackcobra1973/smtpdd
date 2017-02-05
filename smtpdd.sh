@@ -72,7 +72,7 @@ mainRun()
     if [ $? != 0 ]
     then
       echo "Tempdirectory configuration problem with $tmp_dir - cannot create directory"
-      logger -p mail.error -t smtpdd "Temp directory configuration problem with $tmp_dir - cannot create directory"
+      sudo logger -p mail.error -t smtpdd "Temp directory configuration problem with $tmp_dir - cannot create directory"
       exit $ex_tempfail
     fi
   fi
@@ -105,7 +105,7 @@ mainRun()
 
       queueit="no"
 
-      logger -p mail.info -t smtpdd "Attempting delivery of mail from $2 to $3 for host $hostname on $port with mode of $mode"
+      sudo logger -p mail.info -t smtpdd "Attempting delivery of mail from $2 to $3 for host $hostname on $port with mode of $mode"
 
       if [ "$mode" != "o" ]
       then
@@ -116,7 +116,7 @@ mainRun()
         then
           if [ $RET != "75" ]
           then
-            logger -p mail.info -t smtpdd "Mail delivery for $3 has failed"
+            sudo logger -p mail.info -t smtpdd "Mail delivery for $3 has failed"
             echo "Mail delivery for $3 has failed (unknown user?)"
             break
           fi
@@ -125,23 +125,23 @@ mainRun()
           if [ "$mode" == "q" ]
           then
             #echo "Delivery of mail to $hostname on $port from $from to $to has failed, but will be queued ($RET)"
-            logger -p mail.warning -t smtpdd "Delivery of mail to $hostname on $port from $from to $to has failed, but will be queued ($RET)"
+            sudo logger -p mail.warning -t smtpdd "Delivery of mail to $hostname on $port from $from to $to has failed, but will be queued ($RET)"
             queueit="yes"
           fi
 
           # delete mode
           if [ "$mode" == "d" ]
           then
-            logger -p mail.info -t smtpdd "Delivery of mail to $hostname on $port from $from to $to has failed and will not be re-tried (delete mode)"
+            sudo logger -p mail.info -t smtpdd "Delivery of mail to $hostname on $port from $from to $to has failed and will not be re-tried (delete mode)"
             randomtext="asdf"
           fi
         else
-          logger -p mail.info -t smtpdd "Delivery of mail to $hostname on $port from $from to $to has succeeded"
+          sudo logger -p mail.info -t smtpdd "Delivery of mail to $hostname on $port from $from to $to has succeeded"
           randomtext="asdf"
         fi
       else
         echo "In queue only mode, will queue"
-        logger -p mail.info -t smtpdd "In queue-only mode, will queue mail until a queue run is performed"
+        sudo logger -p mail.info -t smtpdd "In queue-only mode, will queue mail until a queue run is performed"
         queueit="yes"
       fi
 
@@ -194,7 +194,7 @@ then
     queueRun "$1"
     exit 0
   else
-    logger -p mail.warning -t smtpdd "Queue directory locked, must exit from qrun"
+    sudo logger -p mail.warning -t smtpdd "Queue directory locked, must exit from qrun"
     exit $ex_tempfail
   fi
 fi
@@ -207,7 +207,7 @@ fi
 
 if flock -n -s 8
 then
-  logger -p mail.info -t smtpdd "${@}"
+  sudo logger -p mail.info -t smtpdd "${@}"
   rno=3
   for recip in ${@:3}
   do
@@ -219,7 +219,7 @@ then
   done
   rm -f $tmp_dir/$tmp_filename
 else
-  logger -p mail.warning -t smtpdd "Cannot obtain shared lock - will not deliver right now"
+  sudo logger -p mail.warning -t smtpdd "Cannot obtain shared lock - will not deliver right now"
   rm -rf $lock_file
   exit $ex_tempfail
 fi
