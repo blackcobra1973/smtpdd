@@ -41,9 +41,11 @@ attemptDelivery()
   if [ $? == 0 ]
   then
     echo "Message delivered, deleting"
+    sudo logger -p mail.info -t smtpdd "Queued Delivery of mail to $hostname on $port from $from to $to has succeeded"
     rm -f $mail $mail.body
   else
     echo "Message delivery failed, leaving in place"
+    sudo logger -p mail.warning -t smtpdd "Queued Delivery of mail to $hostname on $port from $from to $to has failed, leaving in place ($RET)"
   fi
 }
 
