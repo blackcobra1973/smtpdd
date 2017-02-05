@@ -1,4 +1,7 @@
 #!/bin/bash
+#
+# Script to manage delivery to multiple Mail hosts
+#
 
 msmtp_bin="/usr/bin/msmtp"
 tmp_dir="/var/tmp/smtpdd"
